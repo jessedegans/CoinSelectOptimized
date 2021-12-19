@@ -1,5 +1,5 @@
 
-# MachineLearningLegoSorting
+# Optimized Coin Selection Algorithm
 Source code for my version of a new coin select algorithm
 
 
