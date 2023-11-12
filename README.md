@@ -1,44 +1,28 @@
 
 # Optimized Coin Selection Algorithm
-Source code for my version of a new coin select algorithm
+Source code for an optimized coin select algorithm
 
 
 ### Bitcoin Coin Select Explained
-Coin selection is the method a wallet uses to choose which of its UTXOs to spend in a particular transaction.
-Most early Bitcoin wallets implemented relatively simple coin selection strategies, such as spending UTXOs in the order they were received (first-in, first-out), but as fees have become more of a concern, I have created a new and more advanced algorithm that tries to minimize transaction fee and prevent dust.
-
+Coin selection is the process through which a wallet decides which Unspent Transaction Outputs (UTXOs) to utilize in a specific transaction. In the early days, many Bitcoin wallets employed straightforward strategies like spending UTXOs in the order they were received (first-in, first-out). However, with the rising concern over fees, I developed a sophisticated algorithm aimed at minimizing transaction fees and preventing the accumulation of 'dust'—small, negligible amounts in transactions.
 
 ### Story
 
-One of the major problems of creating a bitcoin transaction is selecting the right UTXO’s.
-You want to select UTXO’s where the sum is equal to or greater than the desired amount.
-But you also don’t want too many UTXO’s since that would make the transaction bigger in
-bytes which results in higher fees.
+One significant challenge in creating a Bitcoin transaction lies in the selection of the appropriate UTXOs. The goal is to choose UTXOs whose total value equals or exceeds the desired amount. However, it's equally important to avoid an excessive number of UTXOs, as this would increase the transaction size in bytes, leading to higher fees.
 
-The most general coin selection algorithms are focused on getting the exact amount and
-don’t really care about the size of the UTXO set. Because every transaction that comes
-close to the amount will result in small dust being left over.
+Most conventional coin selection algorithms prioritize obtaining the exact transaction amount and often overlook the size of the UTXO set. This approach results in residual 'dust' in transactions that come close to the required amount.
 
-For example, if I would send someone 0.01 BTC. For that, I select UTXOs that equal to
-0.0104 BTC (1040000 sat) and my fee would be around 0.00034 BTC (34000 sat). That would result in a new UTXO
-for myself with the value of 0.00006 BTC (6000 sat), which is almost as high as the fees I will pay for
-using that UTXO. 
+For instance, if I were to send 0.01 BTC, I would select UTXOs totaling 0.0104 BTC (1040000 sat), incurring a fee of approximately 0.00034 BTC (34000 sat). This process generates a new UTXO for myself valued at 0.00006 BTC (6000 sat), nearly equivalent to the fees paid for utilizing that UTXO.
 
 ## How the algorithm works
 
-I choose to implement the Branch and Bound algorithm to optimize coin selection. The main
-idea is that it would shrink the UTXO set and it reduces “Dust” (worthless amounts) and
-fees. According to Mark Erhart’s research “BnB was able to reduce bitcoin change in
-approximately 40 percent of transactions that would otherwise have produced bigger
-numbers of UTXOs.”
+I choose to implement the Branch and Bound algorithm to enhance coin selection. 
+The primary concept is to minimize the UTXO set, effectively reducing 'Dust' (insignificant amounts) and associated fees. 
+According to Mark Erhart's research, the Branch and Bound algorithm successfully decreased bitcoin change in about 40% of transactions, which would have otherwise generated larger numbers of UTXOs.
 
 ## Effective Value
 
-The first thing to do is to prepare the UTXO’s by adding something called an effective value
-to these UTXO’s. We can calculate a fee before the utxo selection since the input and
-output scripts are fixed sizes and the cost per input and output are fixed known values. The
-idea of the effective value is that it is the value of the utxo when we subtract the costs of
-including it in the transaction. The effective value is easily calculated as followed:
+The initial step involves enhancing UTXOs by introducing the concept 'effective value' This calculation is performed before UTXO selection, leveraging fixed sizes of input and output scripts, along with known costs per input and output. The effective value represents the true worth of the UTXO, obtained by subtracting the associated transaction inclusion costs. The formula for calculating the effective value is straightforward: 
 effectiveValue = utxo.value − feePerByte × bytesPerInput
 
 ## The tree
@@ -51,12 +35,6 @@ BTC, and 0.05 BTC.
 
 [![tekening.png](https://i.postimg.cc/pL2DCr2y/tekening.png)](https://postimg.cc/VdVrLY0c)
 
-At each node, we decide if we include or omit the UTXO. We quickly see that if we include
-the 0.09 that would result in 0.19 which exceeds our desired value of 0.14 BTC so It decides
-to omit the UTXO. Our algorithm is inclusion first so it first tries to include. It includes the
-0.05 BTC and it seems to have a match. Backtracking is also used if we included something
-but then their child nodes give us no solution. We would need to go back to one level and
-try the omitting branch(It is called “exclusion branch” in code).
-To prevent the endless calculation of ways and possibly long computation time, the max
-tries are set to 100000. After that, it will either just switch to blackjack or accumulative
-selection.
+At each node, a decision is made to either include or omit the UTXO. Upon quick evaluation, if including 0.09 results in a sum of 0.19, surpassing our desired 0.14 BTC, the algorithm opts to omit the UTXO. This algorithm prioritizes inclusion, attempting to include first. In this instance, it successfully includes 0.05 BTC, finding a match. Backtracking is used if inclusion leads to child nodes with no viable solution, requiring a return to the previous level and exploration of the exclusion branch.
+
+To prevent endless calculations and potential long computation times, a maximum tries limit of 100,000 is set. Beyond this threshold, the algorithm either shifts to a different strategy, such as blackjack, or fallsback completely to accumulative selection.
